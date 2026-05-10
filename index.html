@@ -10,13 +10,36 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f4f7f6;
-            color: #333;
+            background-color: #f8f9fa;
+            color: #2d3436;
         }
         h1 {
             text-align: center;
             color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .filter-container {
+            text-align: center;
             margin-bottom: 30px;
+        }
+        .filter-container label {
+            font-weight: 600;
+            margin-right: 10px;
+            color: #2c3e50;
+        }
+        select {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #dfe6e9;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        select:hover {
+            border-color: #74b9ff;
         }
         .dashboard {
             display: flex;
@@ -29,7 +52,7 @@
         .card {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             padding: 20px;
             flex: 1;
             min-width: 550px;
@@ -47,16 +70,17 @@
         /* Tooltip style */
         .tooltip {
             position: absolute;
-            background-color: rgba(44, 62, 80, 0.9);
+            background-color: rgba(45, 52, 54, 0.95);
             color: white;
-            padding: 10px 15px;
-            border-radius: 6px;
+            padding: 12px 16px;
+            border-radius: 8px;
             pointer-events: none;
             font-size: 0.9rem;
             opacity: 0;
             transition: opacity 0.2s, transform 0.1s;
             z-index: 100;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            line-height: 1.5;
         }
         /* Tree styles */
         .node circle {
@@ -75,13 +99,13 @@
         }
         .link {
             fill: none;
-            stroke: #e0e0e0;
+            stroke: #dfe6e9;
             stroke-width: 1.5px;
         }
         /* Dumbbell styles */
         .axis-label {
             font-size: 12px;
-            fill: #7f8c8d;
+            fill: #636e72;
         }
         .dot {
             cursor: pointer;
@@ -95,6 +119,18 @@
 </head>
 <body>
     <h1>Superstore Dashboard Analysis</h1>
+    
+    <div class="filter-container">
+        <label for="region-filter">📍 Filter by Region:</label>
+        <select id="region-filter">
+            <option value="All">All Regions</option>
+            <option value="Central">Central</option>
+            <option value="East">East</option>
+            <option value="South">South</option>
+            <option value="West">West</option>
+        </select>
+    </div>
+
     <div class="dashboard">
         <div class="card">
             <h2>Radial Tidy Tree (Year &rarr; Quarter &rarr; Category)</h2>
@@ -108,14 +144,16 @@
     <div class="tooltip" id="tooltip"></div>
 
     <script>
-        // Shared Color Scale for Categories
+        // Shared Color Scale for Categories - Menggunakan palet warna baru (Modern Pastel/Vibrant)
         const categories = ["Furniture", "Office Supplies", "Technology"];
         const colorScale = d3.scaleOrdinal()
             .domain(categories)
-            .range(["#e67e22", "#3498db", "#2ecc71"]); // Orange, Blue, Green
+            .range(["#6c5ce7", "#00b894", "#fdcb6e"]); // Ungu (Furniture), Hijau Teal (Office), Kuning Emas (Technology)
 
         const formatCurrency = d3.format("$,.2f");
         const tooltip = d3.select("#tooltip");
+
+        let superstoreData = [];
 
         function showTooltip(event, content) {
             tooltip.html(content)
@@ -147,12 +185,41 @@
                 d.Quarter = "Q" + Math.ceil((d.parsedDate.getMonth() + 1) / 3);
             });
 
-            drawRadialTree(data);
-            drawDumbbellPlot(data);
+            superstoreData = data;
+
+            // Initial render
+            updateDashboard("All");
+
+            // Event listener for filter
+            d3.select("#region-filter").on("change", function() {
+                updateDashboard(this.value);
+            });
+
         }).catch(error => {
             console.error("Error loading data:", error);
             d3.select("body").append("p").text("Error loading data. Please make sure 'sample_-_superstore.json' is in the same directory.").style("color", "red").style("text-align", "center");
         });
+
+        function updateDashboard(selectedRegion) {
+            // Filter data based on selection
+            let filteredData = selectedRegion === "All" 
+                ? superstoreData 
+                : superstoreData.filter(d => d.Region === selectedRegion);
+
+            // Clear previous charts
+            d3.select("#tree-chart").selectAll("*").remove();
+            d3.select("#dumbbell-chart").selectAll("*").remove();
+
+            // Handle empty data case
+            if(filteredData.length === 0) {
+                d3.select("#tree-chart").append("p").text("No data available for this region.");
+                d3.select("#dumbbell-chart").append("p").text("No data available for this region.");
+                return;
+            }
+
+            drawRadialTree(filteredData);
+            drawDumbbellPlot(filteredData);
+        }
 
         function drawRadialTree(data) {
             const width = 600;
@@ -166,7 +233,6 @@
                 .attr("transform", `translate(${width/2},${height/2})`);
 
             // Build hierarchy: Year -> Quarter -> Category
-            // Rollup computes total sales & profit for the leaf nodes
             const rollupData = d3.rollup(data, 
                 v => ({
                     Sales: d3.sum(v, d => d.Sales),
@@ -208,7 +274,7 @@
                     if (!d.children && d.data[0]) {
                         return colorScale(d.data[0]); // Color leaf by category
                     }
-                    return "#95a5a6"; // Gray for intermediate nodes
+                    return "#b2bec3"; // Soft gray for intermediate nodes
                 })
                 .on("mouseover", (event, d) => {
                     let title = d.data[0] || "Superstore";
@@ -231,12 +297,12 @@
                 .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end")
                 .attr("transform", d => d.x >= Math.PI ? "rotate(180)" : null)
                 .text(d => d.data[0] || "Superstore")
-                .style("fill", d => !d.children ? colorScale(d.data[0]) : "#2c3e50")
+                .style("fill", d => !d.children ? colorScale(d.data[0]) : "#2d3436")
                 .style("font-weight", d => !d.children ? "bold" : "normal");
         }
 
         function drawDumbbellPlot(data) {
-            // Aggregate Sales and Profit per Category for the entire dataset
+            // Aggregate Sales and Profit per Category
             const aggregated = Array.from(d3.rollup(data, 
                 v => ({
                     Sales: d3.sum(v, d => d.Sales),
@@ -256,15 +322,15 @@
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
             // Scales
-            const maxVal = d3.max(aggregated, d => Math.max(d.Sales, d.Profit));
-            const minVal = d3.min(aggregated, d => Math.min(d.Sales, d.Profit));
+            const maxVal = d3.max(aggregated, d => Math.max(d.Sales, d.Profit)) || 0;
+            const minVal = d3.min(aggregated, d => Math.min(d.Sales, d.Profit)) || 0;
 
             const x = d3.scaleLinear()
                 .domain([Math.min(0, minVal), maxVal]).nice()
                 .range([0, width]);
 
             const y = d3.scaleBand()
-                .domain(aggregated.map(d => d.Category))
+                .domain(categories) // Keep categories consistent even if some are missing in filter
                 .range([0, height])
                 .padding(0.4);
 
@@ -283,55 +349,65 @@
                 .style("font-weight", "bold")
                 .style("fill", d => colorScale(d)); // Synchronized color
 
+            // Filter out categories with no data
+            const validData = aggregated.filter(d => d.Sales !== undefined && d.Profit !== undefined);
+
             // Dumbbell lines
             svg.selectAll(".line")
-                .data(aggregated)
+                .data(validData)
                 .join("line")
                 .attr("class", "line")
                 .attr("x1", d => x(d.Profit))
                 .attr("x2", d => x(d.Sales))
                 .attr("y1", d => y(d.Category) + y.bandwidth() / 2)
                 .attr("y2", d => y(d.Category) + y.bandwidth() / 2)
-                .attr("stroke", "#dcdde1")
-                .attr("stroke-width", 4);
+                .attr("stroke", "#b2bec3")
+                .attr("stroke-width", 4)
+                .attr("opacity", 0)
+                .transition().duration(800)
+                .attr("opacity", 1);
 
             // Sales Dots
             svg.selectAll(".dot-sales")
-                .data(aggregated)
+                .data(validData)
                 .join("circle")
                 .attr("class", "dot dot-sales")
-                .attr("cx", d => x(d.Sales))
                 .attr("cy", d => y(d.Category) + y.bandwidth() / 2)
                 .attr("r", 8)
                 .attr("fill", d => colorScale(d.Category))
-                .on("mouseover", (event, d) => showTooltip(event, `<b>${d.Category}</b><br>Total Sales: <span style="color:#2ecc71">${formatCurrency(d.Sales)}</span>`))
-                .on("mouseout", hideTooltip);
+                .attr("cx", d => x(0)) // start at 0 for animation
+                .on("mouseover", (event, d) => showTooltip(event, `<b>${d.Category}</b><br>Total Sales: <span style="color:#00b894">${formatCurrency(d.Sales)}</span>`))
+                .on("mouseout", hideTooltip)
+                .transition().duration(800)
+                .attr("cx", d => x(d.Sales));
 
             // Profit Dots
             svg.selectAll(".dot-profit")
-                .data(aggregated)
+                .data(validData)
                 .join("circle")
                 .attr("class", "dot dot-profit")
-                .attr("cx", d => x(d.Profit))
                 .attr("cy", d => y(d.Category) + y.bandwidth() / 2)
                 .attr("r", 8)
                 .attr("fill", "white") 
                 .attr("stroke", d => colorScale(d.Category))
                 .attr("stroke-width", 3)
+                .attr("cx", d => x(0)) // start at 0 for animation
                 .on("mouseover", (event, d) => showTooltip(event, `<b>${d.Category}</b><br>Total Profit: <span style="color:#e74c3c">${formatCurrency(d.Profit)}</span>`))
-                .on("mouseout", hideTooltip);
+                .on("mouseout", hideTooltip)
+                .transition().duration(800)
+                .attr("cx", d => x(d.Profit));
 
             // Legend
             const legend = svg.append("g")
                 .attr("transform", `translate(${width / 2 - 80}, -40)`);
                 
             // Sales Legend
-            legend.append("circle").attr("cx", 0).attr("cy", 0).attr("r", 7).attr("fill", "#7f8c8d");
-            legend.append("text").attr("x", 12).attr("y", 4).text("Total Sales").style("font-size", "13px").attr("fill", "#333");
+            legend.append("circle").attr("cx", 0).attr("cy", 0).attr("r", 7).attr("fill", "#636e72");
+            legend.append("text").attr("x", 12).attr("y", 4).text("Total Sales").style("font-size", "13px").attr("fill", "#2d3436");
 
             // Profit Legend
-            legend.append("circle").attr("cx", 100).attr("cy", 0).attr("r", 7).attr("fill", "white").attr("stroke", "#7f8c8d").attr("stroke-width", 3);
-            legend.append("text").attr("x", 112).attr("y", 4).text("Total Profit").style("font-size", "13px").attr("fill", "#333");
+            legend.append("circle").attr("cx", 100).attr("cy", 0).attr("r", 7).attr("fill", "white").attr("stroke", "#636e72").attr("stroke-width", 3);
+            legend.append("text").attr("x", 112).attr("y", 4).text("Total Profit").style("font-size", "13px").attr("fill", "#2d3436");
         }
     </script>
 </body>
