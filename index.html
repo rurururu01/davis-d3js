@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superstore Visualization Dashboard</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .dashboard {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 20px;
+            flex: 1;
+            min-width: 550px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .card h2 {
+            text-align: center;
+            font-size: 1.3rem;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #34495e;
+        }
+        /* Tooltip style */
+        .tooltip {
+            position: absolute;
+            background-color: rgba(44, 62, 80, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            pointer-events: none;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.1s;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        /* Tree styles */
+        .node circle {
+            stroke: #fff;
+            stroke-width: 1.5px;
+            cursor: pointer;
+            transition: r 0.2s;
+        }
+        .node circle:hover {
+            r: 8;
+        }
+        .node text {
+            font-size: 12px;
+            font-family: sans-serif;
+            text-shadow: 0 1px 3px rgba(255,255,255,0.8);
+        }
+        .link {
+            fill: none;
+            stroke: #e0e0e0;
+            stroke-width: 1.5px;
+        }
+        /* Dumbbell styles */
+        .axis-label {
+            font-size: 12px;
+            fill: #7f8c8d;
+        }
+        .dot {
+            cursor: pointer;
+            transition: stroke-width 0.2s, r 0.2s;
+        }
+        .dot:hover {
+            stroke-width: 3px;
+            r: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Superstore Dashboard Analysis</h1>
+    <div class="dashboard">
+        <div class="card">
+            <h2>Radial Tidy Tree (Year &rarr; Quarter &rarr; Category)</h2>
+            <div id="tree-chart"></div>
+        </div>
+        <div class="card">
+            <h2>Dumbbell Dot Plot (Sales vs Profit by Category)</h2>
+            <div id="dumbbell-chart"></div>
+        </div>
+    </div>
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // Shared Color Scale for Categories
+        const categories = ["Furniture", "Office Supplies", "Technology"];
+        const colorScale = d3.scaleOrdinal()
+            .domain(categories)
+            .range(["#e67e22", "#3498db", "#2ecc71"]); // Orange, Blue, Green
+
+        const formatCurrency = d3.format("$,.2f");
+        const tooltip = d3.select("#tooltip");
+
+        function showTooltip(event, content) {
+            tooltip.html(content)
+                .style("left", (event.pageX + 15) + "px")
+                .style("top", (event.pageY - 15) + "px")
+                .style("opacity", 1)
+                .style("transform", "scale(1)");
+        }
+
+        function hideTooltip() {
+            tooltip.style("opacity", 0)
+                .style("transform", "scale(0.95)");
+        }
+
+        // Load Data
+        d3.json("sample_-_superstore.json").then(data => {
+            // Pre-process data
+            data.forEach(d => {
+                d.Sales = +d.Sales;
+                d.Profit = +d.Profit;
+                // Standardize date parsing
+                let parts = d["Order Date"].split("/"); // e.g., "1/3/2023"
+                if (parts.length === 3) {
+                    d.parsedDate = new Date(parts[2], parts[0] - 1, parts[1]);
+                } else {
+                    d.parsedDate = new Date(d["Order Date"]);
+                }
+                d.Year = d.parsedDate.getFullYear().toString();
+                d.Quarter = "Q" + Math.ceil((d.parsedDate.getMonth() + 1) / 3);
+            });
+
+            drawRadialTree(data);
+            drawDumbbellPlot(data);
+        }).catch(error => {
+            console.error("Error loading data:", error);
+            d3.select("body").append("p").text("Error loading data. Please make sure 'sample_-_superstore.json' is in the same directory.").style("color", "red").style("text-align", "center");
+        });
+
+        function drawRadialTree(data) {
+            const width = 600;
+            const height = 600;
+            const radius = width / 2;
+
+            const svg = d3.select("#tree-chart").append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${width/2},${height/2})`);
+
+            // Build hierarchy: Year -> Quarter -> Category
+            // Rollup computes total sales & profit for the leaf nodes
+            const rollupData = d3.rollup(data, 
+                v => ({
+                    Sales: d3.sum(v, d => d.Sales),
+                    Profit: d3.sum(v, d => d.Profit)
+                }),
+                d => d.Year, d => d.Quarter, d => d.Category
+            );
+            
+            const hierarchy = d3.hierarchy(rollupData);
+
+            const tree = d3.tree()
+                .size([2 * Math.PI, radius - 120]) // Leave space for labels
+                .separation((a, b) => (a.parent == b.parent ? 1 : 2) / a.depth);
+
+            const root = tree(hierarchy);
+
+            // Links
+            svg.append("g")
+                .selectAll("path")
+                .data(root.links())
+                .join("path")
+                .attr("class", "link")
+                .attr("d", d3.linkRadial()
+                    .angle(d => d.x)
+                    .radius(d => d.y)
+                );
+
+            // Nodes
+            const node = svg.append("g")
+                .selectAll("g")
+                .data(root.descendants())
+                .join("g")
+                .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`);
+
+            node.append("circle")
+                .attr("class", "dot")
+                .attr("r", d => d.children ? 5 : 7)
+                .attr("fill", d => {
+                    if (!d.children && d.data[0]) {
+                        return colorScale(d.data[0]); // Color leaf by category
+                    }
+                    return "#95a5a6"; // Gray for intermediate nodes
+                })
+                .on("mouseover", (event, d) => {
+                    let title = d.data[0] || "Superstore";
+                    let content = `<b>${title}</b>`;
+                    if (!d.children && d.data[1]) {
+                        content += `<br>Sales: ${formatCurrency(d.data[1].Sales)}`;
+                        content += `<br>Profit: ${formatCurrency(d.data[1].Profit)}`;
+                    } else if (d.depth === 1) {
+                        content = `<b>Year: ${title}</b>`;
+                    } else if (d.depth === 2) {
+                        content = `<b>Quarter: ${title}</b>`;
+                    }
+                    showTooltip(event, content);
+                })
+                .on("mouseout", hideTooltip);
+
+            node.append("text")
+                .attr("dy", "0.31em")
+                .attr("x", d => d.x < Math.PI === !d.children ? 10 : -10)
+                .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end")
+                .attr("transform", d => d.x >= Math.PI ? "rotate(180)" : null)
+                .text(d => d.data[0] || "Superstore")
+                .style("fill", d => !d.children ? colorScale(d.data[0]) : "#2c3e50")
+                .style("font-weight", d => !d.children ? "bold" : "normal");
+        }
+
+        function drawDumbbellPlot(data) {
+            // Aggregate Sales and Profit per Category for the entire dataset
+            const aggregated = Array.from(d3.rollup(data, 
+                v => ({
+                    Sales: d3.sum(v, d => d.Sales),
+                    Profit: d3.sum(v, d => d.Profit)
+                }),
+                d => d.Category
+            ), ([Category, values]) => ({ Category, ...values }));
+
+            const margin = {top: 60, right: 40, bottom: 60, left: 140};
+            const width = 600 - margin.left - margin.right;
+            const height = 400 - margin.top - margin.bottom;
+
+            const svg = d3.select("#dumbbell-chart").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Scales
+            const maxVal = d3.max(aggregated, d => Math.max(d.Sales, d.Profit));
+            const minVal = d3.min(aggregated, d => Math.min(d.Sales, d.Profit));
+
+            const x = d3.scaleLinear()
+                .domain([Math.min(0, minVal), maxVal]).nice()
+                .range([0, width]);
+
+            const y = d3.scaleBand()
+                .domain(aggregated.map(d => d.Category))
+                .range([0, height])
+                .padding(0.4);
+
+            // X Axis
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x).ticks(6).tickFormat(d3.format("$.2s")))
+                .selectAll("text")
+                .attr("class", "axis-label");
+
+            // Y Axis
+            svg.append("g")
+                .call(d3.axisLeft(y).tickSize(0))
+                .selectAll("text")
+                .style("font-size", "14px")
+                .style("font-weight", "bold")
+                .style("fill", d => colorScale(d)); // Synchronized color
+
+            // Dumbbell lines
+            svg.selectAll(".line")
+                .data(aggregated)
+                .join("line")
+                .attr("class", "line")
+                .attr("x1", d => x(d.Profit))
+                .attr("x2", d => x(d.Sales))
+                .attr("y1", d => y(d.Category) + y.bandwidth() / 2)
+                .attr("y2", d => y(d.Category) + y.bandwidth() / 2)
+                .attr("stroke", "#dcdde1")
+                .attr("stroke-width", 4);
+
+            // Sales Dots
+            svg.selectAll(".dot-sales")
+                .data(aggregated)
+                .join("circle")
+                .attr("class", "dot dot-sales")
+                .attr("cx", d => x(d.Sales))
+                .attr("cy", d => y(d.Category) + y.bandwidth() / 2)
+                .attr("r", 8)
+                .attr("fill", d => colorScale(d.Category))
+                .on("mouseover", (event, d) => showTooltip(event, `<b>${d.Category}</b><br>Total Sales: <span style="color:#2ecc71">${formatCurrency(d.Sales)}</span>`))
+                .on("mouseout", hideTooltip);
+
+            // Profit Dots
+            svg.selectAll(".dot-profit")
+                .data(aggregated)
+                .join("circle")
+                .attr("class", "dot dot-profit")
+                .attr("cx", d => x(d.Profit))
+                .attr("cy", d => y(d.Category) + y.bandwidth() / 2)
+                .attr("r", 8)
+                .attr("fill", "white") 
+                .attr("stroke", d => colorScale(d.Category))
+                .attr("stroke-width", 3)
+                .on("mouseover", (event, d) => showTooltip(event, `<b>${d.Category}</b><br>Total Profit: <span style="color:#e74c3c">${formatCurrency(d.Profit)}</span>`))
+                .on("mouseout", hideTooltip);
+
+            // Legend
+            const legend = svg.append("g")
+                .attr("transform", `translate(${width / 2 - 80}, -40)`);
+                
+            // Sales Legend
+            legend.append("circle").attr("cx", 0).attr("cy", 0).attr("r", 7).attr("fill", "#7f8c8d");
+            legend.append("text").attr("x", 12).attr("y", 4).text("Total Sales").style("font-size", "13px").attr("fill", "#333");
+
+            // Profit Legend
+            legend.append("circle").attr("cx", 100).attr("cy", 0).attr("r", 7).attr("fill", "white").attr("stroke", "#7f8c8d").attr("stroke-width", 3);
+            legend.append("text").attr("x", 112).attr("y", 4).text("Total Profit").style("font-size", "13px").attr("fill", "#333");
+        }
+    </script>
+</body>
+</html>
