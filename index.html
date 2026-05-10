@@ -3,88 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Superstore Visualization Dashboard</title>
+    <title>Superstore Explorer Dashboard</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
+            padding: 0;
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styling (Filter Section) */
+        .sidebar {
+            width: 260px;
+            background-color: #141414;
+            border-right: 1px solid #2a2a2a;
             padding: 20px;
-            background-color: #f8f9fa;
-            color: #2d3436;
+            overflow-y: auto;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.8);
+            z-index: 10;
         }
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 10px;
+        .sidebar h2 {
+            font-size: 1.1rem;
+            margin-top: 0;
+            color: #ffffff;
+            border-bottom: 1px solid #2a2a2a;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .filter-container {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .filter-container label {
-            font-weight: 600;
-            margin-right: 10px;
-            color: #2c3e50;
-        }
-        select {
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: 1px solid #dfe6e9;
-            font-size: 1rem;
-            outline: none;
+        .reset-btn {
+            background-color: #ff007f;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
             cursor: pointer;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
+            font-size: 0.75rem;
+            font-weight: bold;
+            transition: background 0.2s;
         }
-        select:hover {
-            border-color: #74b9ff;
+        .reset-btn:hover {
+            background-color: #d10068;
+        }
+        .filter-group {
+            margin-bottom: 25px;
+        }
+        .filter-title {
+            font-weight: bold;
+            color: #00f3ff;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+        }
+        .filter-title::before {
+            content: "▾";
+            margin-right: 8px;
+            font-size: 1.2rem;
+            color: #39ff14;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #b3b3b3;
+            transition: color 0.2s;
+        }
+        .checkbox-label:hover {
+            color: #ffffff;
+        }
+        .checkbox-label input[type="checkbox"] {
+            margin-right: 10px;
+            accent-color: #39ff14; /* Neon Green Checkbox */
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        /* Main Content Styling */
+        .main-content {
+            flex: 1;
+            padding: 20px 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #0a0a0a 0%, #111111 100%);
+        }
+        .main-content h1 {
+            text-align: left;
+            color: #ffffff;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
         }
         .dashboard {
             display: flex;
             flex-direction: row;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: flex-start;
-            gap: 20px;
+            gap: 25px;
             flex-wrap: wrap;
         }
         .card {
-            background: white;
+            background: #171717;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
             padding: 20px;
             flex: 1;
-            min-width: 550px;
+            min-width: 500px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            position: relative;
         }
         .card h2 {
-            text-align: center;
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             margin-top: 0;
             margin-bottom: 20px;
-            color: #34495e;
+            color: #e0e0e0;
+            width: 100%;
+            text-align: left;
+            border-bottom: 1px solid #2a2a2a;
+            padding-bottom: 10px;
         }
+
         /* Tooltip style */
         .tooltip {
             position: absolute;
-            background-color: rgba(45, 52, 54, 0.95);
-            color: white;
+            background-color: rgba(20, 20, 20, 0.95);
+            color: #ffffff;
             padding: 12px 16px;
-            border-radius: 8px;
+            border-radius: 6px;
+            border: 1px solid #39ff14;
             pointer-events: none;
             font-size: 0.9rem;
             opacity: 0;
             transition: opacity 0.2s, transform 0.1s;
-            z-index: 100;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.2);
             line-height: 1.5;
         }
-        /* Tree styles */
+
+        /* D3 SVG Styles for Dark Theme */
         .node circle {
-            stroke: #fff;
+            stroke: #171717;
             stroke-width: 1.5px;
             cursor: pointer;
             transition: r 0.2s;
@@ -93,19 +169,21 @@
             r: 8;
         }
         .node text {
-            font-size: 12px;
+            font-size: 11px;
             font-family: sans-serif;
-            text-shadow: 0 1px 3px rgba(255,255,255,0.8);
+            fill: #b3b3b3;
         }
         .link {
             fill: none;
-            stroke: #dfe6e9;
+            stroke: #333333;
             stroke-width: 1.5px;
         }
-        /* Dumbbell styles */
         .axis-label {
             font-size: 12px;
-            fill: #636e72;
+            fill: #888888;
+        }
+        .domain, .tick line {
+            stroke: #333333;
         }
         .dot {
             cursor: pointer;
@@ -115,45 +193,62 @@
             stroke-width: 3px;
             r: 10px;
         }
+        .no-data {
+            color: #ff007f;
+            margin: 50px 0;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
-    <h1>Superstore Dashboard Analysis</h1>
     
-    <div class="filter-container">
-        <label for="region-filter">📍 Filter by Region:</label>
-        <select id="region-filter">
-            <option value="All">All Regions</option>
-            <option value="Central">Central</option>
-            <option value="East">East</option>
-            <option value="South">South</option>
-            <option value="West">West</option>
-        </select>
+    <!-- Sidebar / Filter Panel -->
+    <div class="sidebar">
+        <h2>Filters <button class="reset-btn" id="reset-btn">Reset All</button></h2>
+        
+        <div class="filter-group">
+            <div class="filter-title">Region</div>
+            <div id="region-filters"></div>
+        </div>
+
+        <div class="filter-group">
+            <div class="filter-title">Segment</div>
+            <div id="segment-filters"></div>
+        </div>
     </div>
 
-    <div class="dashboard">
-        <div class="card">
-            <h2>Radial Tidy Tree (Year &rarr; Quarter &rarr; Category)</h2>
-            <div id="tree-chart"></div>
-        </div>
-        <div class="card">
-            <h2>Dumbbell Dot Plot (Sales vs Profit by Category)</h2>
-            <div id="dumbbell-chart"></div>
+    <!-- Main Dashboard Area -->
+    <div class="main-content">
+        <h1>📊 Superstore Explorer</h1>
+        <div class="dashboard">
+            <div class="card">
+                <h2>Radial Tidy Tree (Year &rarr; Quarter &rarr; Category)</h2>
+                <div id="tree-chart"></div>
+            </div>
+            <div class="card">
+                <h2>Dumbbell Dot Plot (Sales vs Profit by Category)</h2>
+                <div id="dumbbell-chart"></div>
+            </div>
         </div>
     </div>
+
     <div class="tooltip" id="tooltip"></div>
 
     <script>
-        // Shared Color Scale for Categories - Menggunakan palet warna baru (Modern Pastel/Vibrant)
+        // Neon Color Palette for Categories
         const categories = ["Furniture", "Office Supplies", "Technology"];
         const colorScale = d3.scaleOrdinal()
             .domain(categories)
-            .range(["#6c5ce7", "#00b894", "#fdcb6e"]); // Ungu (Furniture), Hijau Teal (Office), Kuning Emas (Technology)
+            .range(["#ff007f", "#00f3ff", "#39ff14"]); // Neon Pink, Neon Cyan, Neon Green
 
         const formatCurrency = d3.format("$,.2f");
         const tooltip = d3.select("#tooltip");
 
         let superstoreData = [];
+        let allRegions = [];
+        let allSegments = [];
+        let selectedRegions = new Set();
+        let selectedSegments = new Set();
 
         function showTooltip(event, content) {
             tooltip.html(content)
@@ -174,8 +269,7 @@
             data.forEach(d => {
                 d.Sales = +d.Sales;
                 d.Profit = +d.Profit;
-                // Standardize date parsing
-                let parts = d["Order Date"].split("/"); // e.g., "1/3/2023"
+                let parts = d["Order Date"].split("/");
                 if (parts.length === 3) {
                     d.parsedDate = new Date(parts[2], parts[0] - 1, parts[1]);
                 } else {
@@ -187,33 +281,64 @@
 
             superstoreData = data;
 
-            // Initial render
-            updateDashboard("All");
+            // Extract unique values for filters
+            allRegions = Array.from(new Set(data.map(d => d.Region))).sort();
+            allSegments = Array.from(new Set(data.map(d => d.Segment))).sort();
 
-            // Event listener for filter
-            d3.select("#region-filter").on("change", function() {
-                updateDashboard(this.value);
+            // Initialize all as selected
+            allRegions.forEach(r => selectedRegions.add(r));
+            allSegments.forEach(s => selectedSegments.add(s));
+
+            // Build Checkbox UI
+            buildCheckboxes("#region-filters", allRegions, selectedRegions);
+            buildCheckboxes("#segment-filters", allSegments, selectedSegments);
+
+            // Initial render
+            updateDashboard();
+
+            // Reset Button
+            d3.select("#reset-btn").on("click", () => {
+                allRegions.forEach(r => selectedRegions.add(r));
+                allSegments.forEach(s => selectedSegments.add(s));
+                d3.selectAll(".sidebar input[type='checkbox']").property("checked", true);
+                updateDashboard();
             });
 
         }).catch(error => {
             console.error("Error loading data:", error);
-            d3.select("body").append("p").text("Error loading data. Please make sure 'sample_-_superstore.json' is in the same directory.").style("color", "red").style("text-align", "center");
+            d3.select(".main-content").append("p").text("Error loading data.").style("color", "#ff007f");
         });
 
-        function updateDashboard(selectedRegion) {
-            // Filter data based on selection
-            let filteredData = selectedRegion === "All" 
-                ? superstoreData 
-                : superstoreData.filter(d => d.Region === selectedRegion);
+        function buildCheckboxes(containerId, items, selectedSet) {
+            const container = d3.select(containerId);
+            container.selectAll("label")
+                .data(items)
+                .join("label")
+                .attr("class", "checkbox-label")
+                .html(d => `<input type="checkbox" value="${d}" checked> ${d}`)
+                .select("input")
+                .on("change", function(event, d) {
+                    if (this.checked) {
+                        selectedSet.add(d);
+                    } else {
+                        selectedSet.delete(d);
+                    }
+                    updateDashboard();
+                });
+        }
 
-            // Clear previous charts
+        function updateDashboard() {
+            let filteredData = superstoreData.filter(d => 
+                selectedRegions.has(d.Region) && 
+                selectedSegments.has(d.Segment)
+            );
+
             d3.select("#tree-chart").selectAll("*").remove();
             d3.select("#dumbbell-chart").selectAll("*").remove();
 
-            // Handle empty data case
             if(filteredData.length === 0) {
-                d3.select("#tree-chart").append("p").text("No data available for this region.");
-                d3.select("#dumbbell-chart").append("p").text("No data available for this region.");
+                d3.select("#tree-chart").append("p").attr("class", "no-data").text("No data matches the selected filters.");
+                d3.select("#dumbbell-chart").append("p").attr("class", "no-data").text("No data matches the selected filters.");
                 return;
             }
 
@@ -222,8 +347,8 @@
         }
 
         function drawRadialTree(data) {
-            const width = 600;
-            const height = 600;
+            const width = 550;
+            const height = 550;
             const radius = width / 2;
 
             const svg = d3.select("#tree-chart").append("svg")
@@ -232,19 +357,15 @@
                 .append("g")
                 .attr("transform", `translate(${width/2},${height/2})`);
 
-            // Build hierarchy: Year -> Quarter -> Category
             const rollupData = d3.rollup(data, 
-                v => ({
-                    Sales: d3.sum(v, d => d.Sales),
-                    Profit: d3.sum(v, d => d.Profit)
-                }),
+                v => ({ Sales: d3.sum(v, d => d.Sales), Profit: d3.sum(v, d => d.Profit) }),
                 d => d.Year, d => d.Quarter, d => d.Category
             );
             
             const hierarchy = d3.hierarchy(rollupData);
 
             const tree = d3.tree()
-                .size([2 * Math.PI, radius - 120]) // Leave space for labels
+                .size([2 * Math.PI, radius - 100])
                 .separation((a, b) => (a.parent == b.parent ? 1 : 2) / a.depth);
 
             const root = tree(hierarchy);
@@ -255,10 +376,7 @@
                 .data(root.links())
                 .join("path")
                 .attr("class", "link")
-                .attr("d", d3.linkRadial()
-                    .angle(d => d.x)
-                    .radius(d => d.y)
-                );
+                .attr("d", d3.linkRadial().angle(d => d.x).radius(d => d.y));
 
             // Nodes
             const node = svg.append("g")
@@ -269,23 +387,21 @@
 
             node.append("circle")
                 .attr("class", "dot")
-                .attr("r", d => d.children ? 5 : 7)
+                .attr("r", d => d.children ? 4 : 6)
                 .attr("fill", d => {
-                    if (!d.children && d.data[0]) {
-                        return colorScale(d.data[0]); // Color leaf by category
-                    }
-                    return "#b2bec3"; // Soft gray for intermediate nodes
+                    if (!d.children && d.data[0]) return colorScale(d.data[0]);
+                    return "#555555"; // Darker gray for inner nodes
                 })
                 .on("mouseover", (event, d) => {
                     let title = d.data[0] || "Superstore";
-                    let content = `<b>${title}</b>`;
+                    let content = `<b style="color:#00f3ff">${title}</b>`;
                     if (!d.children && d.data[1]) {
                         content += `<br>Sales: ${formatCurrency(d.data[1].Sales)}`;
-                        content += `<br>Profit: ${formatCurrency(d.data[1].Profit)}`;
+                        content += `<br>Profit: <span style="color:${d.data[1].Profit < 0 ? '#ff007f' : '#39ff14'}">${formatCurrency(d.data[1].Profit)}</span>`;
                     } else if (d.depth === 1) {
-                        content = `<b>Year: ${title}</b>`;
+                        content = `<b style="color:#fff">Year: ${title}</b>`;
                     } else if (d.depth === 2) {
-                        content = `<b>Quarter: ${title}</b>`;
+                        content = `<b style="color:#fff">Quarter: ${title}</b>`;
                     }
                     showTooltip(event, content);
                 })
@@ -296,23 +412,19 @@
                 .attr("x", d => d.x < Math.PI === !d.children ? 10 : -10)
                 .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end")
                 .attr("transform", d => d.x >= Math.PI ? "rotate(180)" : null)
-                .text(d => d.data[0] || "Superstore")
-                .style("fill", d => !d.children ? colorScale(d.data[0]) : "#2d3436")
+                .text(d => d.data[0] || "All Data")
+                .style("fill", d => !d.children ? colorScale(d.data[0]) : "#b3b3b3")
                 .style("font-weight", d => !d.children ? "bold" : "normal");
         }
 
         function drawDumbbellPlot(data) {
-            // Aggregate Sales and Profit per Category
             const aggregated = Array.from(d3.rollup(data, 
-                v => ({
-                    Sales: d3.sum(v, d => d.Sales),
-                    Profit: d3.sum(v, d => d.Profit)
-                }),
+                v => ({ Sales: d3.sum(v, d => d.Sales), Profit: d3.sum(v, d => d.Profit) }),
                 d => d.Category
             ), ([Category, values]) => ({ Category, ...values }));
 
-            const margin = {top: 60, right: 40, bottom: 60, left: 140};
-            const width = 600 - margin.left - margin.right;
+            const margin = {top: 50, right: 40, bottom: 60, left: 130};
+            const width = 550 - margin.left - margin.right;
             const height = 400 - margin.top - margin.bottom;
 
             const svg = d3.select("#dumbbell-chart").append("svg")
@@ -321,38 +433,29 @@
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            // Scales
             const maxVal = d3.max(aggregated, d => Math.max(d.Sales, d.Profit)) || 0;
             const minVal = d3.min(aggregated, d => Math.min(d.Sales, d.Profit)) || 0;
 
-            const x = d3.scaleLinear()
-                .domain([Math.min(0, minVal), maxVal]).nice()
-                .range([0, width]);
-
-            const y = d3.scaleBand()
-                .domain(categories) // Keep categories consistent even if some are missing in filter
-                .range([0, height])
-                .padding(0.4);
+            const x = d3.scaleLinear().domain([Math.min(0, minVal), maxVal]).nice().range([0, width]);
+            const y = d3.scaleBand().domain(categories).range([0, height]).padding(0.4);
 
             // X Axis
             svg.append("g")
                 .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x).ticks(6).tickFormat(d3.format("$.2s")))
-                .selectAll("text")
-                .attr("class", "axis-label");
+                .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format("$.2s")))
+                .selectAll("text").attr("class", "axis-label");
 
             // Y Axis
             svg.append("g")
                 .call(d3.axisLeft(y).tickSize(0))
                 .selectAll("text")
-                .style("font-size", "14px")
+                .style("font-size", "13px")
                 .style("font-weight", "bold")
-                .style("fill", d => colorScale(d)); // Synchronized color
+                .style("fill", d => colorScale(d));
 
-            // Filter out categories with no data
             const validData = aggregated.filter(d => d.Sales !== undefined && d.Profit !== undefined);
 
-            // Dumbbell lines
+            // Lines
             svg.selectAll(".line")
                 .data(validData)
                 .join("line")
@@ -361,53 +464,47 @@
                 .attr("x2", d => x(d.Sales))
                 .attr("y1", d => y(d.Category) + y.bandwidth() / 2)
                 .attr("y2", d => y(d.Category) + y.bandwidth() / 2)
-                .attr("stroke", "#b2bec3")
-                .attr("stroke-width", 4)
+                .attr("stroke", "#444444")
+                .attr("stroke-width", 3)
                 .attr("opacity", 0)
-                .transition().duration(800)
-                .attr("opacity", 1);
+                .transition().duration(800).attr("opacity", 1);
 
-            // Sales Dots
+            // Sales Dots (Solid)
             svg.selectAll(".dot-sales")
                 .data(validData)
                 .join("circle")
                 .attr("class", "dot dot-sales")
                 .attr("cy", d => y(d.Category) + y.bandwidth() / 2)
-                .attr("r", 8)
+                .attr("r", 7)
                 .attr("fill", d => colorScale(d.Category))
-                .attr("cx", d => x(0)) // start at 0 for animation
-                .on("mouseover", (event, d) => showTooltip(event, `<b>${d.Category}</b><br>Total Sales: <span style="color:#00b894">${formatCurrency(d.Sales)}</span>`))
+                .attr("cx", d => x(0))
+                .on("mouseover", (event, d) => showTooltip(event, `<b>${d.Category}</b><br>Sales: <span style="color:#00f3ff">${formatCurrency(d.Sales)}</span>`))
                 .on("mouseout", hideTooltip)
-                .transition().duration(800)
-                .attr("cx", d => x(d.Sales));
+                .transition().duration(800).attr("cx", d => x(d.Sales));
 
-            // Profit Dots
+            // Profit Dots (Hollow)
             svg.selectAll(".dot-profit")
                 .data(validData)
                 .join("circle")
                 .attr("class", "dot dot-profit")
                 .attr("cy", d => y(d.Category) + y.bandwidth() / 2)
-                .attr("r", 8)
-                .attr("fill", "white") 
+                .attr("r", 7)
+                .attr("fill", "#171717") 
                 .attr("stroke", d => colorScale(d.Category))
-                .attr("stroke-width", 3)
-                .attr("cx", d => x(0)) // start at 0 for animation
-                .on("mouseover", (event, d) => showTooltip(event, `<b>${d.Category}</b><br>Total Profit: <span style="color:#e74c3c">${formatCurrency(d.Profit)}</span>`))
+                .attr("stroke-width", 2.5)
+                .attr("cx", d => x(0))
+                .on("mouseover", (event, d) => showTooltip(event, `<b>${d.Category}</b><br>Profit: <span style="color:${d.Profit < 0 ? '#ff007f' : '#39ff14'}">${formatCurrency(d.Profit)}</span>`))
                 .on("mouseout", hideTooltip)
-                .transition().duration(800)
-                .attr("cx", d => x(d.Profit));
+                .transition().duration(800).attr("cx", d => x(d.Profit));
 
             // Legend
-            const legend = svg.append("g")
-                .attr("transform", `translate(${width / 2 - 80}, -40)`);
-                
-            // Sales Legend
-            legend.append("circle").attr("cx", 0).attr("cy", 0).attr("r", 7).attr("fill", "#636e72");
-            legend.append("text").attr("x", 12).attr("y", 4).text("Total Sales").style("font-size", "13px").attr("fill", "#2d3436");
+            const legend = svg.append("g").attr("transform", `translate(${width / 2 - 80}, -35)`);
+            
+            legend.append("circle").attr("cx", 0).attr("cy", 0).attr("r", 6).attr("fill", "#888");
+            legend.append("text").attr("x", 12).attr("y", 4).text("Sales").style("font-size", "12px").attr("fill", "#bbb");
 
-            // Profit Legend
-            legend.append("circle").attr("cx", 100).attr("cy", 0).attr("r", 7).attr("fill", "white").attr("stroke", "#636e72").attr("stroke-width", 3);
-            legend.append("text").attr("x", 112).attr("y", 4).text("Total Profit").style("font-size", "13px").attr("fill", "#2d3436");
+            legend.append("circle").attr("cx", 80).attr("cy", 0).attr("r", 6).attr("fill", "#171717").attr("stroke", "#888").attr("stroke-width", 2);
+            legend.append("text").attr("x", 92).attr("y", 4).text("Profit").style("font-size", "12px").attr("fill", "#bbb");
         }
     </script>
 </body>
