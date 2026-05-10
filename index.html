@@ -10,8 +10,8 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #0a0a0a;
-            color: #e0e0e0;
+            background-color: #faf9f8;
+            color: #5d5d5d;
             display: flex;
             height: 100vh;
             overflow: hidden;
@@ -20,18 +20,18 @@
         /* Sidebar Styling (Filter Section) */
         .sidebar {
             width: 260px;
-            background-color: #141414;
-            border-right: 1px solid #2a2a2a;
+            background-color: #ffffff;
+            border-right: 1px solid #f0f0f0;
             padding: 20px;
             overflow-y: auto;
-            box-shadow: 2px 0 15px rgba(0,0,0,0.8);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.03);
             z-index: 10;
         }
         .sidebar h2 {
             font-size: 1.1rem;
             margin-top: 0;
-            color: #ffffff;
-            border-bottom: 1px solid #2a2a2a;
+            color: #4a4a4a;
+            border-bottom: 1px solid #f0f0f0;
             padding-bottom: 15px;
             margin-bottom: 20px;
             display: flex;
@@ -41,25 +41,26 @@
             letter-spacing: 1px;
         }
         .reset-btn {
-            background-color: #ff007f;
-            color: white;
+            background-color: #ffb3ba;
+            color: #555;
             border: none;
             padding: 6px 12px;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 0.75rem;
             font-weight: bold;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.1s;
         }
         .reset-btn:hover {
-            background-color: #d10068;
+            background-color: #ff9eaa;
+            transform: scale(1.05);
         }
         .filter-group {
             margin-bottom: 25px;
         }
         .filter-title {
             font-weight: bold;
-            color: #00f3ff;
+            color: #8da47e; /* Soft earthy green */
             margin-bottom: 12px;
             font-size: 0.95rem;
             display: flex;
@@ -69,7 +70,7 @@
             content: "▾";
             margin-right: 8px;
             font-size: 1.2rem;
-            color: #39ff14;
+            color: #baffc9;
         }
         .checkbox-label {
             display: flex;
@@ -77,15 +78,15 @@
             margin-bottom: 10px;
             cursor: pointer;
             font-size: 0.9rem;
-            color: #b3b3b3;
+            color: #777;
             transition: color 0.2s;
         }
         .checkbox-label:hover {
-            color: #ffffff;
+            color: #333;
         }
         .checkbox-label input[type="checkbox"] {
             margin-right: 10px;
-            accent-color: #39ff14; /* Neon Green Checkbox */
+            accent-color: #8da47e; /* Soft green checkbox */
             width: 16px;
             height: 16px;
             cursor: pointer;
@@ -98,16 +99,15 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            background: linear-gradient(135deg, #0a0a0a 0%, #111111 100%);
+            background: #faf9f8;
         }
         .main-content h1 {
             text-align: left;
-            color: #ffffff;
+            color: #4a4a4a;
             margin-top: 0;
             margin-bottom: 20px;
             font-size: 1.8rem;
             letter-spacing: 1px;
-            text-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
         }
         .dashboard {
             display: flex;
@@ -118,10 +118,10 @@
             flex-wrap: wrap;
         }
         .card {
-            background: #171717;
-            border-radius: 12px;
-            border: 1px solid #2a2a2a;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #f2f2f2;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
             padding: 20px;
             flex: 1;
             min-width: 500px;
@@ -134,33 +134,33 @@
             font-size: 1.1rem;
             margin-top: 0;
             margin-bottom: 20px;
-            color: #e0e0e0;
+            color: #666;
             width: 100%;
             text-align: left;
-            border-bottom: 1px solid #2a2a2a;
+            border-bottom: 1px solid #f2f2f2;
             padding-bottom: 10px;
         }
 
         /* Tooltip style */
         .tooltip {
             position: absolute;
-            background-color: rgba(20, 20, 20, 0.95);
-            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.95);
+            color: #555;
             padding: 12px 16px;
-            border-radius: 6px;
-            border: 1px solid #39ff14;
+            border-radius: 10px;
+            border: 1px solid #eaeaea;
             pointer-events: none;
             font-size: 0.9rem;
             opacity: 0;
             transition: opacity 0.2s, transform 0.1s;
             z-index: 1000;
-            box-shadow: 0 0 15px rgba(57, 255, 20, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             line-height: 1.5;
         }
 
-        /* D3 SVG Styles for Dark Theme */
+        /* D3 SVG Styles for Soft Pastel Theme */
         .node circle {
-            stroke: #171717;
+            stroke: #ffffff;
             stroke-width: 1.5px;
             cursor: pointer;
             transition: r 0.2s;
@@ -171,19 +171,19 @@
         .node text {
             font-size: 11px;
             font-family: sans-serif;
-            fill: #b3b3b3;
+            fill: #777;
         }
         .link {
             fill: none;
-            stroke: #333333;
+            stroke: #e8e8e8;
             stroke-width: 1.5px;
         }
         .axis-label {
             font-size: 12px;
-            fill: #888888;
+            fill: #a0a0a0;
         }
         .domain, .tick line {
-            stroke: #333333;
+            stroke: #e8e8e8;
         }
         .dot {
             cursor: pointer;
@@ -194,7 +194,7 @@
             r: 10px;
         }
         .no-data {
-            color: #ff007f;
+            color: #ff9eaa;
             margin: 50px 0;
             font-style: italic;
         }
@@ -219,7 +219,8 @@
 
     <!-- Main Dashboard Area -->
     <div class="main-content">
-        <h1>📊 Superstore Explorer</h1>
+        <!-- Changed Icon to Basket/Cart -->
+        <h1>🛒 Superstore Explorer</h1>
         <div class="dashboard">
             <div class="card">
                 <h2>Radial Tidy Tree (Year &rarr; Quarter &rarr; Category)</h2>
@@ -235,11 +236,11 @@
     <div class="tooltip" id="tooltip"></div>
 
     <script>
-        // Neon Color Palette for Categories
+        // Soft Pastel Color Palette
         const categories = ["Furniture", "Office Supplies", "Technology"];
         const colorScale = d3.scaleOrdinal()
             .domain(categories)
-            .range(["#ff007f", "#00f3ff", "#39ff14"]); // Neon Pink, Neon Cyan, Neon Green
+            .range(["#ffb3ba", "#baffc9", "#bae1ff"]); // Pastel Pink, Pastel Green, Pastel Blue
 
         const formatCurrency = d3.format("$,.2f");
         const tooltip = d3.select("#tooltip");
@@ -306,7 +307,7 @@
 
         }).catch(error => {
             console.error("Error loading data:", error);
-            d3.select(".main-content").append("p").text("Error loading data.").style("color", "#ff007f");
+            d3.select(".main-content").append("p").text("Error loading data.").style("color", "#ff9eaa");
         });
 
         function buildCheckboxes(containerId, items, selectedSet) {
@@ -390,18 +391,18 @@
                 .attr("r", d => d.children ? 4 : 6)
                 .attr("fill", d => {
                     if (!d.children && d.data[0]) return colorScale(d.data[0]);
-                    return "#555555"; // Darker gray for inner nodes
+                    return "#e0e0e0"; // Soft gray for inner nodes
                 })
                 .on("mouseover", (event, d) => {
                     let title = d.data[0] || "Superstore";
-                    let content = `<b style="color:#00f3ff">${title}</b>`;
+                    let content = `<b style="color:#666">${title}</b>`;
                     if (!d.children && d.data[1]) {
                         content += `<br>Sales: ${formatCurrency(d.data[1].Sales)}`;
-                        content += `<br>Profit: <span style="color:${d.data[1].Profit < 0 ? '#ff007f' : '#39ff14'}">${formatCurrency(d.data[1].Profit)}</span>`;
+                        content += `<br>Profit: <span style="color:${d.data[1].Profit < 0 ? '#ffb3ba' : '#baffc9'}">${formatCurrency(d.data[1].Profit)}</span>`;
                     } else if (d.depth === 1) {
-                        content = `<b style="color:#fff">Year: ${title}</b>`;
+                        content = `<b style="color:#555">Year: ${title}</b>`;
                     } else if (d.depth === 2) {
-                        content = `<b style="color:#fff">Quarter: ${title}</b>`;
+                        content = `<b style="color:#555">Quarter: ${title}</b>`;
                     }
                     showTooltip(event, content);
                 })
@@ -413,7 +414,7 @@
                 .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end")
                 .attr("transform", d => d.x >= Math.PI ? "rotate(180)" : null)
                 .text(d => d.data[0] || "All Data")
-                .style("fill", d => !d.children ? colorScale(d.data[0]) : "#b3b3b3")
+                .style("fill", d => !d.children ? "#555" : "#888")
                 .style("font-weight", d => !d.children ? "bold" : "normal");
         }
 
@@ -451,7 +452,7 @@
                 .selectAll("text")
                 .style("font-size", "13px")
                 .style("font-weight", "bold")
-                .style("fill", d => colorScale(d));
+                .style("fill", "#666");
 
             const validData = aggregated.filter(d => d.Sales !== undefined && d.Profit !== undefined);
 
@@ -464,7 +465,7 @@
                 .attr("x2", d => x(d.Sales))
                 .attr("y1", d => y(d.Category) + y.bandwidth() / 2)
                 .attr("y2", d => y(d.Category) + y.bandwidth() / 2)
-                .attr("stroke", "#444444")
+                .attr("stroke", "#e0e0e0")
                 .attr("stroke-width", 3)
                 .attr("opacity", 0)
                 .transition().duration(800).attr("opacity", 1);
@@ -478,7 +479,7 @@
                 .attr("r", 7)
                 .attr("fill", d => colorScale(d.Category))
                 .attr("cx", d => x(0))
-                .on("mouseover", (event, d) => showTooltip(event, `<b>${d.Category}</b><br>Sales: <span style="color:#00f3ff">${formatCurrency(d.Sales)}</span>`))
+                .on("mouseover", (event, d) => showTooltip(event, `<b>${d.Category}</b><br>Sales: <span style="color:#8da47e">${formatCurrency(d.Sales)}</span>`))
                 .on("mouseout", hideTooltip)
                 .transition().duration(800).attr("cx", d => x(d.Sales));
 
@@ -489,22 +490,22 @@
                 .attr("class", "dot dot-profit")
                 .attr("cy", d => y(d.Category) + y.bandwidth() / 2)
                 .attr("r", 7)
-                .attr("fill", "#171717") 
+                .attr("fill", "#ffffff") 
                 .attr("stroke", d => colorScale(d.Category))
                 .attr("stroke-width", 2.5)
                 .attr("cx", d => x(0))
-                .on("mouseover", (event, d) => showTooltip(event, `<b>${d.Category}</b><br>Profit: <span style="color:${d.Profit < 0 ? '#ff007f' : '#39ff14'}">${formatCurrency(d.Profit)}</span>`))
+                .on("mouseover", (event, d) => showTooltip(event, `<b>${d.Category}</b><br>Profit: <span style="color:${d.Profit < 0 ? '#ffb3ba' : '#8da47e'}">${formatCurrency(d.Profit)}</span>`))
                 .on("mouseout", hideTooltip)
                 .transition().duration(800).attr("cx", d => x(d.Profit));
 
             // Legend
             const legend = svg.append("g").attr("transform", `translate(${width / 2 - 80}, -35)`);
             
-            legend.append("circle").attr("cx", 0).attr("cy", 0).attr("r", 6).attr("fill", "#888");
-            legend.append("text").attr("x", 12).attr("y", 4).text("Sales").style("font-size", "12px").attr("fill", "#bbb");
+            legend.append("circle").attr("cx", 0).attr("cy", 0).attr("r", 6).attr("fill", "#b0b0b0");
+            legend.append("text").attr("x", 12).attr("y", 4).text("Sales").style("font-size", "12px").attr("fill", "#777");
 
-            legend.append("circle").attr("cx", 80).attr("cy", 0).attr("r", 6).attr("fill", "#171717").attr("stroke", "#888").attr("stroke-width", 2);
-            legend.append("text").attr("x", 92).attr("y", 4).text("Profit").style("font-size", "12px").attr("fill", "#bbb");
+            legend.append("circle").attr("cx", 80).attr("cy", 0).attr("r", 6).attr("fill", "#ffffff").attr("stroke", "#b0b0b0").attr("stroke-width", 2);
+            legend.append("text").attr("x", 92).attr("y", 4).text("Profit").style("font-size", "12px").attr("fill", "#777");
         }
     </script>
 </body>
